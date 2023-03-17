@@ -1,7 +1,7 @@
 import { ConversationMember } from 'src/conversation-member/models/conversation-member.entity';
 import { Message } from 'src/message/models/message.entity';
 import { User } from 'src/user/models/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany  } from 'typeorm'
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany, BeforeInsert  } from 'typeorm'
 
 @Entity()
 export class Conversation{
@@ -22,4 +22,9 @@ export class Conversation{
 
   @OneToMany(() => Message, (message) => message.conversation)
   messages: Message[];
+
+  @BeforeInsert()
+  setCreatedAt(){
+    this.createdAt = new Date();
+  }
 }

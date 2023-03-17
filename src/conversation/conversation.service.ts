@@ -26,25 +26,30 @@ export class ConversationService {
     userUid: string,
   ): Promise<Conversation> {
     try {
+      // get the admin user (user who created the conversation)
       const user = await this.usersRepository.findOne({
         where: {
           uid: userUid,
         },
       });
-  
+
+
       const conversation = new Conversation();
       conversation.name = createConvoDto.name;
       conversation.menu_url = createConvoDto.menuUrl;
+      const savedConversation = await this.conversationsRepository.save(conversation);
+
       const member = new ConversationMember();
       member.user = user;
   
       for(const m of createConvoDto.members){
         const member = new ConversationMember();
         member.user = await this.usersRepository.findOne({where: {uid: m}});
+        member.conversation = savedConversation
         await this.conversationMembersRepository.save(member)
       }
   
-      return this.conversationsRepository.save(conversation);
+      return savedConversation;
     } catch (error) {
       console.log(error);
       throw error;
