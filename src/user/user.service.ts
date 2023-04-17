@@ -13,7 +13,7 @@ export class UserService {
 
   async findAll(): Promise<User[]> {
     try {
-      return this.usersRepository.find();
+      return await this.usersRepository.find();
     } catch (error) {
       console.log(error);
       throw error;
@@ -22,7 +22,7 @@ export class UserService {
 
   async findOne(id: number): Promise<User> {
     try {
-      return this.usersRepository.findOneBy({ id });
+      return await this.usersRepository.findOneBy({ id });
     } catch (error) {
       console.log(error);
       throw error;

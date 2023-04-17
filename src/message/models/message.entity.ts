@@ -1,6 +1,6 @@
 import { Conversation } from 'src/conversation/models/conversation.entity';
 import { User } from 'src/user/models/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, BeforeInsert } from 'typeorm';
 
 
 @Entity()
@@ -18,5 +18,10 @@ export class Message {
   conversation: Conversation;
 
   @ManyToOne(() => User, (user) => user.messages)
-  user: User;
+  sender: User;
+
+  @BeforeInsert()
+  setCreatedAt(){
+    this.createdAt = new Date();
+  }
 }

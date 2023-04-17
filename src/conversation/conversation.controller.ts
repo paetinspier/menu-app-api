@@ -13,39 +13,15 @@ export class ConversationController {
   // Create a conversation
   @Post('create')
   async createConversation(
-    @Body() createConvoDto: CreateConversationDto,
-    userUid: string,
+    @Body() createConvoDto: CreateConversationDto
   ): Promise<any> {
-    return this.conversationService.createConversation(createConvoDto, userUid);
-  }
-  // Add a user to a conversation
-  @Post('/:id/addMember')
-  async addConversationMember(
-    @Param('id') id: number,
-    @Body() addMemberDto: AddConversationMemberDto,
-  ): Promise<any> {
-    return await this.conversationService.addMemeber(id, addMemberDto.userUid);
-  }
-  // Remove a user from a conversation
-  @Delete('/:id/members/:userId')
-  removeConversationMember(
-    @Param('id') id: number,
-    @Param('userId') userId: string,
-  ): Promise<any> {
-    return this.conversationService.removeConversationMember(id, userId);
+    return this.conversationService.createConversation(createConvoDto);
   }
 
   // Retrieve all the conversations for a user
-  @Get('/users/:uid/conversations')
+  @Get('/users/:uid')
   getConversationsForUser(@Param('uid') uid: string): Promise<Conversation[]> {
     return this.conversationService.getConversationsForUser(uid);
-  }
-  // Retrieve a list of members for a conversation
-  @Get('/:id/members')
-  getConversationMembers(
-    @Param('id') id: number,
-  ): Promise<ConversationMember[]> {
-    return this.conversationService.getConversationMembers(id);
   }
 
   // Retrieve all the messages for a conversation
@@ -54,11 +30,10 @@ export class ConversationController {
     return this.conversationService.getConversationMessages(id);
   }
   // Send a message to a conversation
-  @Post('/conversations/:id/messages')
+  @Post('sendMessage')
   sendMessage(
-    @Param('id') id: number,
     @Body() createMessageDto: CreateMessageDto,
   ): Promise<any> {
-    return this.conversationService.sendMessage(id, createMessageDto);
+    return this.conversationService.sendMessage(createMessageDto);
   }
 }

@@ -23,6 +23,6 @@ export class User {
   @OneToMany(() => ConversationMember, (conversationMember: ConversationMember) => conversationMember.user)
   conversationMembers: ConversationMember[];
 
-  @OneToMany(() => Message, (message: Message) => message.user)
+  @OneToMany(() => Message, (message: Message) => message.sender)
   messages: Message[];
 }

@@ -14,6 +14,7 @@ import { ConversationModule } from './conversation/conversation.module';
 import { ConversationMemberController } from './conversation-member/conversation-member.controller';
 import { ConversationMemberService } from './conversation-member/conversation-member.service';
 import { ConversationMemberModule } from './conversation-member/conversation-member.module';
+import { WebsocketModule } from './websocket/websocket.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { ConversationMemberModule } from './conversation-member/conversation-mem
     UserModule,
     TypeOrmModule.forFeature([User]),
     ConversationModule,
-    ConversationMemberModule
+    ConversationMemberModule,
+    WebsocketModule,
   ],
   controllers: [AppController, UserController, ConversationController, ConversationMemberController],
   providers: [AppService, UserService, ConversationService, ConversationMemberService],

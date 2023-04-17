@@ -1,12 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from './models/conversation.entity';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateConversationDto } from './models/create-conversation.dto';
 import { User } from 'src/user/models/user.entity';
 import { ConversationMember } from 'src/conversation-member/models/conversation-member.entity';
 import { Message } from 'src/message/models/message.entity';
 import { CreateMessageDto } from './models/create-message.dto';
+import { WebsocketGateway } from 'src/websocket/websocket.gateway';
 
 @Injectable()
 export class ConversationService {
@@ -19,35 +20,33 @@ export class ConversationService {
     private conversationMembersRepository: Repository<ConversationMember>,
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
+    @Inject(forwardRef(() => WebsocketGateway))
+    private websocketGateway: WebsocketGateway,
   ) {}
 
   async createConversation(
-    createConvoDto: CreateConversationDto,
-    userUid: string,
+    createConvoDto: CreateConversationDto
   ): Promise<Conversation> {
     try {
-      // get the admin user (user who created the conversation)
-      const user = await this.usersRepository.findOne({
-        where: {
-          uid: userUid,
-        },
-      });
-
-
+      //create the conversation
       const conversation = new Conversation();
+      //add convo name
       conversation.name = createConvoDto.name;
+      //add convo menu
       conversation.menu_url = createConvoDto.menuUrl;
+      //save convo
       const savedConversation = await this.conversationsRepository.save(conversation);
 
-      const member = new ConversationMember();
-      member.user = user;
-  
+
+      // add all of the users to the member list
       for(const m of createConvoDto.members){
         const member = new ConversationMember();
         member.user = await this.usersRepository.findOne({where: {uid: m}});
         member.conversation = savedConversation
         await this.conversationMembersRepository.save(member)
       }
+
+      this.websocketGateway.emitConversationUpdate(conversation.id);
   
       return savedConversation;
     } catch (error) {
@@ -56,77 +55,24 @@ export class ConversationService {
     }
   }
 
-  async createConversationMember(
-    conversation: Conversation,
-    user: User,
-  ): Promise<ConversationMember> {
-    const member = this.conversationMembersRepository.create({
-      user,
-      conversation,
-    });
-
-    return this.conversationMembersRepository.save(member);
-  }
-
-  async addMemeber(
-    conversation_id: number,
-    userUid: string,
-  ): Promise<Conversation> {
-    const user = await this.usersRepository.findOne({
-      where: {
-        uid: userUid,
-      },
-    });
-    const conversation = await this.conversationsRepository.findOne({
-      where: {
-        id: conversation_id,
-      },
-    });
-
-    conversation.members = [
-      await this.createConversationMember(conversation, user),
-    ];
-
-    return this.conversationsRepository.save(conversation);
-  }
-
-  async removeConversationMember(conversation_id: number, userUid: string) {
-    const conversation = await this.conversationsRepository.findOne({
-      where: {
-        id: conversation_id,
-      },
-    });
-
-    conversation.members.filter((member) => member.user.uid != userUid);
-
-    return this.conversationsRepository.save(conversation);
-  }
-
   async getConversationsForUser(userUid: string): Promise<Conversation[]> {
-    const user = await this.usersRepository.findOne({
-      where: { uid: userUid },
-    });
-    if(!user){
+    try {
+      const user = await this.usersRepository.findOne({
+        where: { uid: userUid },
+        relations: ['conversationMembers', 'conversationMembers.conversation'], // specify relations to prevent 'map' error
+      });
+  
+      if (!user) {
         throw new NotFoundException(`User with ID ${userUid} not found`);
+      }
+  
+      const conversations = user.conversationMembers.map((member) => member.conversation);
+  
+      return conversations;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
-
-    const conversationMembers = user.conversationMembers;
-    const conversationIds = conversationMembers.map((member) => member.conversation.id);
-
-    return this.conversationsRepository.find({
-        where: { id: In(conversationIds) },
-        relations: ['members', 'members.user', 'messages', 'messages.sender'],
-      });
-  }
-
-  async getConversationMembers(conversation_id: number): Promise<ConversationMember[]> {
-    const conversation = await this.conversationsRepository.findOne({
-        where: {
-          id: conversation_id,
-        },
-      });
-
-    return conversation.members;
   }
 
   async getConversationMessages(conversation_id: number): Promise<Message[]> {
@@ -134,35 +80,36 @@ export class ConversationService {
         where: {
           id: conversation_id,
         },
+        relations: ['messages', 'messages.sender']
       });
 
       return conversation.messages;
   }
 
-  async sendMessage(conversation_id: number, newMessage: CreateMessageDto) {
-    const conversation = await this.conversationsRepository.findOne({
+  async sendMessage(newMessage: CreateMessageDto) {
+    try {
+      const conversation = await this.conversationsRepository.findOne({
         where: {
-            id: conversation_id
+          id: newMessage.conversationId
         }
-    });
-
-    const user = await this.usersRepository.findOne({
+      })
+      const sender = await this.usersRepository.findOne({
         where: {
-            uid: newMessage.senderId
+          uid: newMessage.senderId
         }
-    })
+      })
+      const message = new Message();
+      message.content = newMessage.content;
+      message.conversation = conversation;
+      message.sender = sender;
 
-
-    const message = this.messageRepository.create(newMessage)
-
-    conversation.messages.push(message)
-  }
-
-  async createMessage(user: User, conversation: Conversation): Promise<Message>{
-    const message = this.messageRepository.create({
-        conversation
-    });
-    return message
+      this.websocketGateway.emitConversationUpdate(conversation.id);
+      
+      return await this.messageRepository.save(message);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 }
 
