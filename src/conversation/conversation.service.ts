@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from './models/conversation.entity';
 import { Repository } from 'typeorm';
@@ -25,7 +30,7 @@ export class ConversationService {
   ) {}
 
   async createConversation(
-    createConvoDto: CreateConversationDto
+    createConvoDto: CreateConversationDto,
   ): Promise<Conversation> {
     try {
       //create the conversation
@@ -35,19 +40,22 @@ export class ConversationService {
       //add convo menu
       conversation.menu_url = createConvoDto.menuUrl;
       //save convo
-      const savedConversation = await this.conversationsRepository.save(conversation);
-
+      const savedConversation = await this.conversationsRepository.save(
+        conversation,
+      );
 
       // add all of the users to the member list
-      for(const m of createConvoDto.members){
+      for (const m of createConvoDto.members) {
         const member = new ConversationMember();
-        member.user = await this.usersRepository.findOne({where: {uid: m}});
-        member.conversation = savedConversation
-        await this.conversationMembersRepository.save(member)
+        member.user = await this.usersRepository.findOne({
+          where: { email: m },
+        });
+        member.conversation = savedConversation;
+        await this.conversationMembersRepository.save(member);
       }
 
       this.websocketGateway.emitConversationUpdate(conversation.id);
-  
+
       return savedConversation;
     } catch (error) {
       console.log(error);
@@ -59,15 +67,26 @@ export class ConversationService {
     try {
       const user = await this.usersRepository.findOne({
         where: { uid: userUid },
-        relations: ['conversationMembers', 'conversationMembers.conversation'], // specify relations to prevent 'map' error
+        relations: [
+          'conversationMembers',
+          'conversationMembers.conversation',
+          'conversationMembers.conversation.messages',
+          'conversationMembers.user',
+        ], // specify relations to prevent 'map' error
       });
-  
+
       if (!user) {
         throw new NotFoundException(`User with ID ${userUid} not found`);
       }
-  
-      const conversations = user.conversationMembers.map((member) => member.conversation);
-  
+
+      const conversations = user.conversationMembers.map((member) => {
+        const conversation = member.conversation;
+        // get all the messages associated with the conversation
+        conversation.messages = member.conversation.messages;
+        
+        return conversation;
+      });
+
       return conversations;
     } catch (error) {
       console.log(error);
@@ -77,34 +96,34 @@ export class ConversationService {
 
   async getConversationMessages(conversation_id: number): Promise<Message[]> {
     const conversation = await this.conversationsRepository.findOne({
-        where: {
-          id: conversation_id,
-        },
-        relations: ['messages', 'messages.sender']
-      });
+      where: {
+        id: conversation_id,
+      },
+      relations: ['messages', 'messages.sender'],
+    });
 
-      return conversation.messages;
+    return conversation.messages;
   }
 
   async sendMessage(newMessage: CreateMessageDto) {
     try {
       const conversation = await this.conversationsRepository.findOne({
         where: {
-          id: newMessage.conversationId
-        }
-      })
+          id: newMessage.conversationId,
+        },
+      });
       const sender = await this.usersRepository.findOne({
         where: {
-          uid: newMessage.senderId
-        }
-      })
+          uid: newMessage.senderId,
+        },
+      });
       const message = new Message();
       message.content = newMessage.content;
       message.conversation = conversation;
       message.sender = sender;
 
       this.websocketGateway.emitConversationUpdate(conversation.id);
-      
+
       return await this.messageRepository.save(message);
     } catch (error) {
       console.log(error);
@@ -112,4 +131,3 @@ export class ConversationService {
     }
   }
 }
-
