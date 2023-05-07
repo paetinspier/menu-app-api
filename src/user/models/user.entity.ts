@@ -1,28 +1,26 @@
-import { ConversationMember } from 'src/conversation-member/models/conversation-member.entity';
-import { Conversation } from 'src/conversation/models/conversation.entity';
-import { Message } from 'src/message/models/message.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany} from 'typeorm';
+import { Column, Table } from "@wwwouter/typed-knex";
+import { User } from "./user";
 
-@Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
 
-  @Column()
-  firstName: string;
+@Table('users')
+export class UserEntity {
+    @Column({ primary: true })
+    id: number;
+    @Column()
+    uid: string;
+    @Column()
+    name: string;
+    @Column()
+    email: string;
+    @Column()
+    isActive: boolean;
 
-  @Column()
-  email: string;
-
-  @Column()
-  uid: string;
-
-  @Column({ default: true })
-  isActive: boolean;
-
-  @OneToMany(() => ConversationMember, (conversationMember: ConversationMember) => conversationMember.user)
-  conversationMembers: ConversationMember[];
-
-  @OneToMany(() => Message, (message: Message) => message.sender)
-  messages: Message[];
+    static fromUser(user: User): UserEntity{
+        let entity = new UserEntity();
+        entity.email = user.email;
+        entity.isActive = user.isActive;
+        entity.name = user.name;
+        entity.uid = user.uid;
+        return entity;
+    }
 }

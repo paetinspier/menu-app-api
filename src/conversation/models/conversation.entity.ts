@@ -1,30 +1,23 @@
-import { ConversationMember } from 'src/conversation-member/models/conversation-member.entity';
-import { Message } from 'src/message/models/message.entity';
-import { User } from 'src/user/models/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany, BeforeInsert  } from 'typeorm'
+import { Column, Table } from '@wwwouter/typed-knex';
+import { Conversation } from './conversation';
 
-@Entity()
-export class Conversation{
-    @PrimaryGeneratedColumn()
-    id: number;
+@Table('conversation')
+export class ConversationEntity {
+  @Column({ primary: true })
+  id: number;
+  @Column()
+  title: string;
+  @Column()
+  menu_url: string;
+  @Column()
+  created_at: string;
 
-    @Column()
-    name: string;
+  static fromConversation(convo: Conversation): ConversationEntity {
+    let entity = new ConversationEntity();
+    entity.created_at = convo.created_at;
+    entity.menu_url = convo.menu_url;
+    entity.title = convo.title;
 
-    @Column()
-    menu_url: string;
-
-    @Column({ name: 'created_at', type: 'timestamp with time zone'})
-    createdAt: Date;
-
-    @OneToMany(() => ConversationMember, (member) => member.conversation)
-  members: ConversationMember[];
-
-  @OneToMany(() => Message, (message) => message.conversation)
-  messages: Message[];
-
-  @BeforeInsert()
-  setCreatedAt(){
-    this.createdAt = new Date();
+    return entity;
   }
 }

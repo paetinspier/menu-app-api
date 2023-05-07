@@ -1,17 +1,15 @@
 import { Module } from '@nestjs/common';
-import { Conversation } from './models/conversation.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConversationController } from './conversation.controller';
 import { ConversationService } from './conversation.service';
-import { ConversationMember } from 'src/conversation-member/models/conversation-member.entity';
-import { Message } from 'src/message/models/message.entity';
-import { User } from 'src/user/models/user.entity';
-import { WebsocketModule } from 'src/websocket/websocket.module';
+import { ConversationRepository } from './models/conversation.repository';
+import { DatabaseModule } from 'src/database/database.module';
+import { UserModule } from 'src/user/user.module';
+import { ConversationMemberModule } from 'src/conversation-member/conversation-member.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Conversation, ConversationMember, Message, User]), WebsocketModule],
-  exports: [TypeOrmModule, ConversationService],
+  exports: [ConversationService],
   controllers: [ConversationController],
-  providers: [ConversationService],
+  providers: [ConversationService, ConversationRepository],
+  imports: [DatabaseModule, UserModule, ConversationMemberModule]
 })
 export class ConversationModule {}

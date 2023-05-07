@@ -1,27 +1,30 @@
-import { Conversation } from 'src/conversation/models/conversation.entity';
-import { User } from 'src/user/models/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, BeforeInsert } from 'typeorm';
+import { Column, Table } from "@wwwouter/typed-knex";
+import { Message } from "./message";
 
 
-@Entity()
-export class Message {
-  @PrimaryGeneratedColumn()
-  id: number;
+@Table('message')
+export class MessageEntity{
+    @Column({ primary: true })
+    id: number;
+    @Column()
+    content: string;
+    @Column()
+    conversation_id: number;
+    @Column()
+    sender_id: number;
+    @Column()
+    deleted: boolean;
+    @Column()
+    created_at: string;
 
-  @Column()
-  content: string;
+    static fromMessage(message: Message): MessageEntity{
+        let entity = new MessageEntity();
+        entity.content = message.content;
+        entity.conversation_id = message.conversation_id;
+        entity.created_at = message.created_at;
+        entity.deleted = message.deleted;
+        entity.sender_id = message.sender_id;
 
-  @Column({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt: Date;
-
-  @ManyToOne(() => Conversation, (conversation) => conversation.messages)
-  conversation: Conversation;
-
-  @ManyToOne(() => User, (user) => user.messages)
-  sender: User;
-
-  @BeforeInsert()
-  setCreatedAt(){
-    this.createdAt = new Date();
-  }
+        return entity;
+    }
 }

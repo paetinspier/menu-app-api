@@ -1,23 +1,57 @@
 import { Injectable } from '@nestjs/common';
-import { Message } from './models/message.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { MessageDto } from './models/message.model';
+import { MessageRepository } from './models/message.repository';
+import { Message } from './models/message';
+import { MessageEntity } from './models/message.entity';
 
 @Injectable()
 export class MessageService {
-  constructor(
-    @InjectRepository(Message)
-    private readonly messageRepository: Repository<Message>,
-  ) {}
+  constructor(private readonly repo: MessageRepository) {}
 
-  createMessage(createMessageDto: MessageDto){
-    const newMessage = this.messageRepository.create(createMessageDto);
-    return this.messageRepository.save(newMessage);
+  public async createMessage(message: Message): Promise<any> {
+    try {
+      const result = await this.repo.insertMessage(
+        MessageEntity.fromMessage(message),
+      );
+
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  findMessageById(id: number) {
-    return this.messageRepository.findOneBy({ id: id });
+  public async getConversationMessages(
+    conversationId: number,
+  ): Promise<MessageEntity[]> {
+    try {
+      const result = await this.repo.getConversationMessagesById(
+        conversationId,
+      );
+
+      return result;
+    } catch (error) {}
   }
 
+  public async getUserMessagesByConversation(
+    userId: number,
+    conversationId: number,
+  ): Promise<MessageEntity[]> {
+    try {
+      const result = await this.repo.getConversationMessagesByUserId(
+        userId,
+        conversationId,
+      );
+
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  public async deleteMessage(messageId: number): Promise<void>{
+    try {
+        const result = await this.repo.deleteMessage(messageId);
+    } catch (error) {
+        console.log(error);
+    }
+  }
 }

@@ -1,16 +1,22 @@
-import { Conversation } from 'src/conversation/models/conversation.entity';
-import { User } from 'src/user/models/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Column, Table } from "@wwwouter/typed-knex";
+import { ConversationMember } from "./conversation-member";
 
 
-@Entity()
-export class ConversationMember {
-  @PrimaryGeneratedColumn()
-  id: number;
+@Table('conversation_member')
+export class ConversationMemberEntity {
+    @Column({ primary: true })
+    id: number;
+    @Column()
+    conversation_id: number;
+    @Column()
+    user_id: number;
 
-  @ManyToOne(() => Conversation, (conversation) => conversation.members)
-  conversation: Conversation;
+    static fromConversationMember(convoMember: ConversationMember): ConversationMemberEntity{
+        let entity = new ConversationMemberEntity();
 
-  @ManyToOne(() => User, (user) => user.conversationMembers)
-  user: User;
+        entity.conversation_id = convoMember.conversation_id;
+        entity.user_id = convoMember.user_id;
+
+        return entity;
+    }
 }

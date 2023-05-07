@@ -1,51 +1,49 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './models/user.entity';
-import { Repository } from 'typeorm';
-import { UserModel } from './models/user.model';
+import { UserRepository } from './user.repository';
+import { User } from './models/user';
+import { UserEntity } from './models/user.entity';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
-  ) {}
+  constructor(private readonly repo: UserRepository) {}
 
-  async findAll(): Promise<User[]> {
+  public async createAccount(user: User): Promise<UserEntity> {
     try {
-      return await this.usersRepository.find();
+      const result = await this.repo.insertUser(UserEntity.fromUser(user));
+      const createdUser = await this.repo.getUserById(result);
+      return createdUser;
     } catch (error) {
       console.log(error);
-      throw error;
     }
   }
 
-  async findOne(id: number): Promise<User> {
+  public async getUserById(userId: number): Promise<UserEntity> {
     try {
-      return await this.usersRepository.findOneBy({ id });
+        const user = await this.repo.getUserById(userId);
+
+        return user;
     } catch (error) {
-      console.log(error);
-      throw error;
+        console.log(error);
     }
   }
 
-  async remove(id: number): Promise<any> {
+    public async getUserByUid(userUid: string): Promise<UserEntity> {
     try {
-      await this.usersRepository.delete(id);
+        const user = await this.repo.getUserByUid(userUid);
+
+        return user;
     } catch (error) {
-      console.log(error);
-      throw error;
+        console.log(error);
     }
   }
 
-  async createUser(userReq: UserModel): Promise<any> {
-	try {
-		const newUser = this.usersRepository.create(userReq);
-    	return await this.usersRepository.save(newUser);
-	} catch (error) {
-		console.log(error);
-		throw error
-	}
-    
+  public async getUserByEmail(email: string): Promise<UserEntity> {
+    try {
+      const user = await this.repo.getUserByEmail(email);
+
+      return user;
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
