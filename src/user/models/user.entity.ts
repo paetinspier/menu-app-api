@@ -7,18 +7,18 @@ export class UserEntity {
     @Column({ primary: true })
     id: number;
     @Column()
-    uid: string;
-    @Column()
     name: string;
     @Column()
     email: string;
     @Column()
-    isActive: boolean;
+    uid: string;
+    @Column()
+    is_active: boolean;
 
     static fromUser(user: User): UserEntity{
         let entity = new UserEntity();
         entity.email = user.email;
-        entity.isActive = user.isActive;
+        entity.is_active = user.is_active;
         entity.name = user.name;
         entity.uid = user.uid;
         return entity;

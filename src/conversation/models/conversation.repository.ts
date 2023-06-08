@@ -1,4 +1,4 @@
-import { DatabaseService } from 'src/database/database.service';
+import { DatabaseService } from '../../database/database.service';
 import { ConversationEntity } from './conversation.entity';
 
 export class ConversationRepository {

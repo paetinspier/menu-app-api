@@ -36,7 +36,7 @@ export class ConversationService {
         await this.cmService.createConvoMember(newMember);
       });
 
-      return result
+      return result;
     } catch (error) {
       console.log(error);
     }
@@ -66,36 +66,48 @@ export class ConversationService {
     }
   }
 
-  public async getConversationsByUserId(userId: number): Promise<ConversationEntity[]>{
-	try {
-        const convoMembers = await this.cmService.getConversationMembersByUserId(userId);
+  public async getConversationsByUserId(
+    userId: number,
+  ): Promise<ConversationEntity[]> {
+    try {
+      const convoMembers = await this.cmService.getConversationMembersByUserId(
+        userId,
+      );
 
-		const convos: ConversationEntity[] = [];
-		convoMembers.forEach(async (member) => {
-			const convo = await this.getConversationById(member.conversation_id);
-			convos.push(convo);
-		})
+      const convos: ConversationEntity[] = [];
+      convoMembers.forEach(async (member) => {
+        const convo = await this.getConversationById(member.conversation_id);
+        convos.push(convo);
+      });
 
-		return convos
+      return convos;
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
   }
 
-  public async getConversationsByUserUid(userUid: string): Promise<ConversationEntity[]>{
-	try {
-		const user = await this.userService.getUserByUid(userUid);
-        const convoMembers = await this.cmService.getConversationMembersByUserId(user.id);
+  public async getConversationsByUserUid(
+    userUid: string,
+  ): Promise<ConversationEntity[]> {
+    try {
+      const user = await this.userService.getUserByUid(userUid);
+      if(!user.id){
+        console.log('no user id', user.id)
+        return []
+      }
+      const convoMembers = await this.cmService.getConversationMembersByUserId(
+        user.id,
+      );
 
-		const convos: ConversationEntity[] = [];
-		convoMembers.forEach(async (member) => {
-			const convo = await this.getConversationById(member.conversation_id);
-			convos.push(convo);
-		})
+      const convos: ConversationEntity[] = [];
+      convoMembers.forEach(async (member) => {
+        const convo = await this.getConversationById(member.conversation_id);
+        convos.push(convo);
+      });
 
-		return convos
+      return convos;
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
   }
 
@@ -103,7 +115,7 @@ export class ConversationService {
     conversationId: number,
   ): Promise<ApiResponse> {
     try {
-      const result = await this.repo.deleteConversation(conversationId);
+      await this.repo.deleteConversation(conversationId);
 
       return ApiResponse.success();
     } catch (error) {

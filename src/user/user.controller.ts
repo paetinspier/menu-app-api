@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, InternalServerErrorException, Param, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, InternalServerErrorException, Param, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './models/user';
 import { UserEntity } from './models/user.entity';
@@ -10,13 +10,24 @@ export class UserController {
 
 
     @Post('create')
-    public async createUser(user: User): Promise<User>{
+    public async createUser(@Body() user: User): Promise<UserEntity>{
         try {
             const result = await this.userService.createAccount(user);
 
-            return User.fromEntity(result);
+            return result;
         } catch (error) {
             console.log(error);
+            throw error;
+        }
+    }
+
+    @Get()
+    public async getAllUsers(): Promise<User[]> {
+        try {
+            return await this.userService.getAllUsers();
+        } catch (error) {
+            console.log(error);
+            throw new InternalServerErrorException(error.message);
         }
     }
 

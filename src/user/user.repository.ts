@@ -1,21 +1,20 @@
-import { DatabaseService } from 'src/database/database.service';
 import { UserEntity } from './models/user.entity';
 import { User } from './models/user';
-
+import { DatabaseService } from 'src/database/database.service';
+import { Injectable } from '@nestjs/common';
+@Injectable()
 export class UserRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  public async insertUser(entity: UserEntity): Promise<number> {
+  public async insertUser(entity: UserEntity): Promise<UserEntity> {
     try {
       const result = await this.databaseService.knex
         .query(UserEntity)
-        .insertItemWithReturning(entity, ['id']);
-
-      if (result) {
-        return result.id;
-      }
+        .insertItemWithReturning(entity);
+      return result;
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 
@@ -29,6 +28,19 @@ export class UserRepository {
       return result;
     } catch (error) {
       console.log(error);
+      throw error;
+    }
+  }
+
+  public async getAllUsers(): Promise<UserEntity[]> {
+    try {
+      const result = await this.databaseService.knex
+        .query(UserEntity)
+        .getMany();
+      return result;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
   }
 
@@ -42,6 +54,7 @@ export class UserRepository {
       return result;
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 
@@ -55,6 +68,7 @@ export class UserRepository {
       return result;
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 
@@ -68,6 +82,7 @@ export class UserRepository {
       return result;
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 
@@ -81,6 +96,7 @@ export class UserRepository {
       return result;
     } catch (err) {
       console.error(err);
+      throw err;
     }
   }
 
@@ -89,12 +105,13 @@ export class UserRepository {
       const result = await this.databaseService.knex
         .query(UserEntity)
         .where('name', 'ilike', `%${name}%`)
-        .where('isActive', true)
+        .where('is_active', true)
         .getMany();
 
       return result;
     } catch (err) {
       console.error(err);
+      throw err;
     }
   }
 
@@ -106,11 +123,11 @@ export class UserRepository {
         .updateItem({
           name: user.name,
           email: user.email,
-          isActive: user.isActive,
+          is_active: user.is_active,
         });
-
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 
@@ -124,6 +141,7 @@ export class UserRepository {
         });
     } catch (err) {
       console.error(err);
+      throw err;
     }
   }
 
@@ -132,7 +150,7 @@ export class UserRepository {
       await this.databaseService.knex
         .query(UserEntity)
         .where('id', userId)
-        .updateItem({ isActive: true });
+        .updateItem({ is_active: true });
     } catch (err) {
       console.error(err);
       throw err;
@@ -144,7 +162,7 @@ export class UserRepository {
       await this.databaseService.knex
         .query(UserEntity)
         .where('id', userId)
-        .updateItem({ isActive: false });
+        .updateItem({ is_active: false });
     } catch (err) {
       console.error(err);
       throw err;

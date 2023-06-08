@@ -1,6 +1,9 @@
-import { DatabaseService } from 'src/database/database.service';
-import { ConversationMemberEntity } from './conversation-member.entity';
 
+import { DatabaseService } from 'src/database/database.service';
+import { ConversationMemberEntity } from './models/conversation-member.entity';
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
 export class ConversationMemberRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
@@ -41,7 +44,6 @@ export class ConversationMemberRepository {
         .query(ConversationMemberEntity)
         .where('user_id', userId)
         .getMany();
-
       return result;
     } catch (error) {
       console.log(error);

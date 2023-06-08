@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { ConversationMemberRepository } from './models/conversation-member.repository';
+import { ConversationMemberRepository } from './conversation-member.repository';
 import { ConversationMember } from './models/conversation-member';
 import { ConversationMemberEntity } from './models/conversation-member.entity';
 
 @Injectable()
 export class ConversationMemberService {
-  constructor(private readonly repo: ConversationMemberRepository) {}
+  constructor(
+    private readonly repo: ConversationMemberRepository,
+  ) {}
 
   public async createConvoMember(
     conversationMember: ConversationMember,

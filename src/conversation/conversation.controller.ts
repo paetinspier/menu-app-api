@@ -34,11 +34,11 @@ export class ConversationController {
     }
   }
 
-  @Get('userId/:uid')
+  @Get('userUid/:uid')
   public async getUsersConversationsByUid(@Param() params): Promise<ConversationEntity[]> {
     try {
         const convos = await this.conversationService.getConversationsByUserUid(params.uid);
-
+        console.log('convos',convos)
         return convos;
     } catch (error) {
         console.log(error);
